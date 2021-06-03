@@ -14,20 +14,20 @@ oauth = OAuth(app)
 
 # firebase config
 firebaseConfig = {
-    "apiKey": "AIzaSyACWXK2VmLBotDPD-cnDJ65XDR7WbIhcdk",
-    "authDomain": "stock-recommendation-f23ad.firebaseapp.com",
-    "projectId": "stock-recommendation-f23ad",
-    "storageBucket": "stock-recommendation-f23ad.appspot.com",
-    "messagingSenderId": "320005278116",
-    "appId": "1:320005278116:web:94219442df5f9bfffd5931",
-    "measurementId": "G-R1CY9NBTJY",
-    "databaseURL": "https://stock-recommendation-f23ad-default-rtdb.firebaseio.com/",
+    "apiKey": "",
+    "authDomain": "",
+    "projectId": "",
+    "storageBucket": "",
+    "messagingSenderId": "",
+    "appId": "",
+    "measurementId": "",
+    "databaseURL": "",
   }
 
 google = oauth.register(
     name='google',
-    client_id='320005278116-rojggp59fdbmnhbl398ctrla2vk2l4og.apps.googleusercontent.com',
-    client_secret='lQ_uWxqriiCbm7DzqK_hg190',
+    client_id='3',
+    client_secret='',
     access_token_url='https://accounts.google.com/o/oauth2/token',
     access_token_params=None,
     authorize_url='https://accounts.google.com/o/oauth2/auth',
