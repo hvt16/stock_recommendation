@@ -1,4 +1,6 @@
-from flask import Flask,render_template,request,url_for,redirect,session
+from os import SEEK_CUR
+import re
+from flask import Flask, json,render_template,request,url_for,redirect,session,jsonify
 import pyrebase
 import requests
 from requests.packages.urllib3.contrib.appengine import is_prod_appengine_mvms
@@ -7,6 +9,10 @@ import mail
 import sys
 import hashlib
 from authlib.integrations.flask_client import OAuth
+from recommendation import predict
+import compare_stocks
+import string
+import random
 
 app = Flask(__name__)
 app.secret_key = "my secret key // will be updated"
@@ -14,20 +20,20 @@ oauth = OAuth(app)
 
 # firebase config
 firebaseConfig = {
-    "apiKey": "",
-    "authDomain": "",
-    "projectId": "",
-    "storageBucket": "",
-    "messagingSenderId": "",
-    "appId": "",
-    "measurementId": "",
-    "databaseURL": "",
+    "apiKey": "AIzaSyACWXK2VmLBotDPD-cnDJ65XDR7WbIhcdk",
+    "authDomain": "stock-recommendation-f23ad.firebaseapp.com",
+    "projectId": "stock-recommendation-f23ad",
+    "storageBucket": "stock-recommendation-f23ad.appspot.com",
+    "messagingSenderId": "320005278116",
+    "appId": "1:320005278116:web:94219442df5f9bfffd5931",
+    "measurementId": "G-R1CY9NBTJY",
+    "databaseURL": "https://stock-recommendation-f23ad-default-rtdb.firebaseio.com/",
   }
 
 google = oauth.register(
     name='google',
-    client_id='3',
-    client_secret='',
+    client_id='320005278116-rojggp59fdbmnhbl398ctrla2vk2l4og.apps.googleusercontent.com',
+    client_secret='lQ_uWxqriiCbm7DzqK_hg190',
     access_token_url='https://accounts.google.com/o/oauth2/token',
     access_token_params=None,
     authorize_url='https://accounts.google.com/o/oauth2/auth',
@@ -54,6 +60,9 @@ try:
 except Exception as e:
     sys.stderr.write('db init failed {}'.format(e))
 
+def gen_random_password():
+    return ''.join(random.choice(string.ascii_letters) for _ in range(8))
+
 def get_hash(s):
     h = hashlib.new('sha224')
     s = bytes(s,encoding='utf-8')
@@ -78,7 +87,6 @@ def isRegistered(email):
             return True
     return False
 
-
 @app.route('/', methods=['GET','POST'])
 def basic():
     if request.method == 'POST':
@@ -93,7 +101,8 @@ def basic():
                 details['phone'] = data.val()['phone']
                 details['email'] = data.val()['email']
                 
-                return render_template('home.html',s="logged in successfully")
+                #return redirect(url_for('home'))
+                return render_template('home.html',details=details)
             #auth.sign_in_with_email_and_password(email,password)
             return render_template('index.html',us="invalid credentials")
         except:
@@ -131,8 +140,17 @@ def authorize():
     user_info = resp.json()
     print(user_info)
     session['name'] = user_info['name']
+    details['name'] = session['name']
+    details['email'] = user_info['email']
+    if isRegistered(details['email']) == False:
+        details['phone'] = 0
+        details['uname'] = details['email'][:details['email'].find('.')]
+        details['password'] = gen_random_password()
+        data = db_details()
+        db.child("users").child(details['uname']).set(data)
+        db.child("auth").child(details['uname']).set(details['password'])
     # do something with the token and profile
-    return render_template('home.html',gmail=session['name'])
+    return render_template('home.html',details=details)
 
 @app.route('/verify_email', methods=['GET','POST'])
 def verify_email():
@@ -209,6 +227,35 @@ def reset_password():
             return render_template('reset_password.html',s='password updated')
         except:
             return render_template('reset_password.html',us='could not reset password')
+
+@app.route('/home',methods=['GET','POST'])
+def home():
+    if request.method == 'GET':
+        return render_template('home.html',details=details)
+
+@app.route('/predict_symbol')
+def predict_symbol():
+    # print("predict symbol function")
+    symbol_name = request.args.get('symbol_name',"",type=str)
+    try:
+        prediction = predict(symbol_name)
+        return jsonify(result=prediction[0])
+    except Exception:
+        return jsonify(result="Please Enter correct symbol name!!")
+
+@app.route('/compare')
+def compare():
+    first_symbol = request.args.get('first_symbol',"",type=str)
+    second_symbol = request.args.get('second_symbol',"",type=str)
+    data1 = compare_stocks.get_comparable_data(first_symbol)
+    data2 = compare_stocks.get_comparable_data(second_symbol)
+    try:
+        return jsonify(result1=data1,result2=data2)
+        # call function
+    except:
+        return jsonify(result="Please enter correct symbol names!!")
+
+
 
 @app.route('/logout', methods=['GET'])
 def logout():

@@ -10,7 +10,7 @@ def send_mail(receiver,verification_code):
     s.starttls()
     login = 0
     try:
-        s.login("***************@gmail.com", "***************")
+        s.login("stock.recommendation.sp@gmail.com", "Spro@2021")
         login = 1
     except:
         print("login failed")
@@ -19,6 +19,6 @@ def send_mail(receiver,verification_code):
         subject = "Verify Your Email !!"
         text = "Your verification code is : {}".format(verification_code)
         message = "Subject: {}\n\n{}".format(subject,text)
-        s.sendmail("@#$%^&*(@gmail.com", receiver, message)
+        s.sendmail("stock.recommendation.sp@gmail.com", receiver, message)
 
     s.quit()
